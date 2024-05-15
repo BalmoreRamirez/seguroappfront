@@ -1,0 +1,46 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+@import 'primeicons/primeicons.css';
+@layer tailwind-base, primevue, tailwind-utilities;
+@layer tailwind-base {
+    @tailwind base;
+}
+
+@layer tailwind-utilities {
+    @tailwind components;
+    @tailwind utilities;
+}
+
+@layer base {
+    html {
+        @apply bg-white;
+    }
+
+    .row {
+        @apply flex flex-row flex-wrap px-4 my-4 w-full;
+    }
+
+    .col {
+        @apply w-full px-4 my-1;
+    }
+
+    .p-dialog {
+        @apply rounded-3xl;
+    }
+
+    .p-toast {
+        width: 88vw !important;
+    }
+
+    @screen md {
+        .p-toast {
+            @apply w-[25%];
+            width: auto !important;
+        }
+    }
+
+    @media screen and (min-width: 717px) {
+        .p-toast {
+            width: 25vw !important;
+        }
+    }
+}
