@@ -4,6 +4,9 @@
       <li v-for="route in routes" :key="route.name">
         <router-link :to="route.path" active-class="active-link" class="hover:text-indigo-300">{{ route.name }}</router-link>
       </li>
+      <li>
+        <button @click="logout" class="hover:text-indigo-300">Cerrar sesión</button>
+      </li>
     </ul>
   </nav>
 </template>
@@ -15,8 +18,14 @@ export default {
     const router = useRouter();
     const routes = router.getRoutes().filter(route => route.meta.showMenu);
 
+    const logout = () => {
+      localStorage.removeItem('token');
+      router.push({name: 'Login'});
+    };
+
     return {
-      routes
+      routes,
+      logout
     };
   }
 }

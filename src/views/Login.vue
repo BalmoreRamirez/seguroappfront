@@ -26,14 +26,32 @@
 <script setup>
 import {ref} from 'vue';
 import {useRouter} from 'vue-router';
+import axios from '../axios';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
+import {useToast} from "primevue/usetoast";
+
 
 const router = useRouter();
 const username = ref('');
 const password = ref('');
+const toast = useToast(); // Crea una instancia de toast
 
-const login = () => {
-  router.push({name: 'Inicio'});
+const login = async () => {
+  try {
+    const response = await axios.post('/auth_usuario/authenticate', {
+      usuario: username.value,
+      password: password.value
+    });
+
+    if (response.status === 200 || response.status === 201) {
+      localStorage.setItem('token', response.data.token);
+      await router.push({name: 'Inicio'});
+    } else {
+      toast.add({severity:'error', summary: 'Error de autenticación', detail: 'Las credenciales proporcionadas son incorrectas.', life: 3000});
+    }
+  } catch (error) {
+    toast.add({severity:'error', summary: 'Error de la solicitud', detail: error.message, life: 3000});
+  }
 };
 </script>
