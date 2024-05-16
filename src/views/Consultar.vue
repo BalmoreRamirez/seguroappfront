@@ -30,8 +30,9 @@
   </Dialog>
 </template>
 <script setup>
-import {ref} from 'vue';
+import {onMounted, ref} from 'vue';
 import {useRouter} from 'vue-router';
+import axios from '../axios';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import DataTable from '../components/DataTable.vue';
@@ -44,15 +45,22 @@ const editDialogVisible = ref(false);
 const productToEdit = ref(null);
 const columns = ref([
   {field: 'id', header: 'Id'},
-  {field: 'name', header: 'Club'},
-  {field: 'category', header: 'Zona'},
-  {field: 'quantity', header: 'Miembros'}
+  {field: 'nombre', header: 'Club'},
+  {field: 'iglesia', header: 'Zona'},
+  {field: 'distrito', header: 'Distrito'}
 ]);
-const products = ref([
-  {id: '1', name: 'Orion', category: 'Zona 1', quantity: 30},
-  {id: '2', name: 'Aquila', category: 'Zona 2', quantity: 25},
-  {id: '3', name: 'Scorpius', category: 'Zona 3', quantity: 35}
-]);
+const products = ref([]);
+
+const fetchClubs = async () => {
+  try {
+    const response = await axios.get('/clubs');
+    products.value = response.data;
+  } catch (error) {
+    console.error('Error al obtener los clubes', error);
+  }
+};
+
+onMounted(fetchClubs);
 
 const openEditDialog = (productId) => {
   const product = products.value.find(p => p.id === productId);

@@ -45,7 +45,7 @@ const login = async () => {
     });
 
     if (response.status === 200 || response.status === 201) {
-      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('token', response.data.accessToken);
       await router.push({name: 'Inicio'});
     } else {
       toast.add({severity:'error', summary: 'Error de autenticación', detail: 'Las credenciales proporcionadas son incorrectas.', life: 3000});
