@@ -6,7 +6,7 @@
         <template #item="{ item, props }">
           <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>
             <a :href="href" v-bind="props.action" @click="navigate">
-              <span :class="[item.icon, 'text-color']"/>
+              <span :class="[item.icon, 'text-color']" />
               <span class="text-primary font-semibold">{{ item.label }}</span>
             </a>
           </router-link>
@@ -28,39 +28,65 @@
       </template>
     </Card>
     <div class="my-5 flex justify-end">
-      <Button label="Agregar Persona" @click="openAddDialog"/>
+      <Button label="Agregar Persona" @click="openAddDialog" />
     </div>
-    <DataTable :products="personas" :columns="columns" :actions="actions"></DataTable>
+    <DataTable :products="personas" :columns="columns" :actions="actions" @action="handleAction"></DataTable>
   </div>
+
   <Dialog v-model:visible="addDialogVisible" maximizable modal header="Agregar Persona" :style="{ width: '50rem' }">
     <form class="flex flex-wrap">
       <div class="w-full sm:w-1/2 p-2 flex flex-col">
         <label>Nombre:</label>
-        <InputText v-model="newUser.nombre"/>
+        <InputText v-model="newUser.nombre" />
       </div>
       <div class="w-full sm:w-1/2 p-2 flex flex-col">
         <label>Apellido:</label>
-        <InputText v-model="newUser.apellido"/>
+        <InputText v-model="newUser.apellido" />
       </div>
       <div class="w-full sm:w-1/2 p-2 flex flex-col">
         <label>Edad:</label>
-        <InputNumber v-model="newUser.edad"/>
+        <InputNumber v-model="newUser.edad" />
       </div>
       <div class="w-full sm:w-1/2 p-2 flex flex-col">
         <label>Seguro:</label>
-        <InputSwitch v-model="newUser.seguro"/>
+        <InputSwitch v-model="newUser.seguro" />
       </div>
       <div class="w-full p-2 space-x-2 flex justify-center">
-        <Button class="p-button-danger"  label="Cancelar"/>
-        <Button @click="AgregarUsuarioClub" label="Agregar"/>
+        <Button class="p-button-danger" label="Cancelar" />
+        <Button @click="AgregarUsuarioClub" label="Agregar" />
+      </div>
+    </form>
+  </Dialog>
+
+  <Dialog v-model:visible="editDialogVisible" maximizable modal header="Editar Usuario">
+    <form class="flex flex-wrap">
+      <div class="w-full sm:w-1/2 p-2 flex flex-col">
+        <label>Nombre:</label>
+        <InputText v-model="editUser.nombre" />
+      </div>
+      <div class="w-full sm:w-1/2 p-2 flex flex-col">
+        <label>Apellido:</label>
+        <InputText v-model="editUser.apellido" />
+      </div>
+      <div class="w-full sm:w-1/2 p-2 flex flex-col">
+        <label>Edad:</label>
+        <InputNumber v-model="editUser.edad" />
+      </div>
+      <div class="w-full sm:w-1/2 p-2 flex flex-col">
+        <label>Seguro:</label>
+        <InputSwitch v-model="editUser.seguro" />
+      </div>
+      <div class="w-full p-2 space-x-2 flex justify-center">
+        <Button class="p-button-danger" label="Cancelar" />
+        <Button @click="editarUsuario" label="Agregar" />
       </div>
     </form>
   </Dialog>
 </template>
 
 <script setup>
-import {useRoute} from 'vue-router';
-import {computed, onBeforeMount, ref} from 'vue';
+import { useRoute } from 'vue-router';
+import { computed, onBeforeMount, ref } from 'vue';
 import Card from 'primevue/card';
 import DataTable from "../components/DataTable.vue";
 import Button from 'primevue/button';
@@ -70,21 +96,25 @@ import InputNumber from 'primevue/inputnumber';
 import InputSwitch from 'primevue/inputswitch';
 import Breadcrumb from 'primevue/breadcrumb';
 import axios from "../axios.js";
-import {useToast} from "primevue/usetoast";
+import { useToast } from "primevue/usetoast";
 
 const toast = useToast();
-const people = ref([]);
-const addDialogVisible = ref(false);
-const newUser = ref({
-      nombre: '',
-      apellido: '',
-      edad: null,
-      seguro: true
-    }
-);
 const route = useRoute();
 const id = route.params.id;
 const product = ref();
+const personas = ref([]);
+
+const addDialogVisible = ref(false);
+const editDialogVisible = ref(false);
+const editUser = ref(null);
+const newUser = ref({
+  nombre: '',
+  apellido: '',
+  edad: null,
+  seguro: true
+}
+);
+
 const home = ref({
   icon: 'pi pi-home',
   route: '/inicio'
@@ -92,25 +122,41 @@ const home = ref({
 
 
 const items = computed(() => [
-  {label: 'Consultar', route: {name: 'Consultar'}},
+  { label: 'Consultar', route: { name: 'Consultar' } },
   {
     label: product.value ? product.value.nombre : '',
-    route: product.value ? {name: 'VisualizarClub', params: {id: product.value.id}} : {}
+    route: product.value ? { name: 'VisualizarClub', params: { id: product.value.id } } : {}
   }
 ]);
 
 const columns = ref([
-  {field: 'id', header: 'Id'},
-  {field: 'nombre', header: 'Nombre'},
-  {field: 'apellido', header: 'Apellido'},
-  {field: 'edad', header: 'Edad'},
-  {field: 'seguro', header: 'Seguro'}
+  { field: 'id', header: 'Id' },
+  { field: 'nombre', header: 'Nombre' },
+  { field: 'apellido', header: 'Apellido' },
+  { field: 'edad', header: 'Edad' },
+  { field: 'seguro', header: 'Seguro' }
 ]);
 
-const personas = ref([]);
 
 const openAddDialog = () => {
   addDialogVisible.value = true;
+};
+
+const openEditDialog = (user) => {
+  editUser.value = { ...user };
+  editDialogVisible.value = true;
+};
+
+const actions = ref([
+  { name: 'edit', icon: 'pi pi-pencil', class: 'p-button-rounded p-button-primary p-mr-2' }
+]);
+
+const handleAction = ({ product, actionName }) => {
+  switch (actionName) {
+    case 'edit':
+      openEditDialog(product);
+      break;
+  }
 };
 
 const AgregarUsuarioClub = async () => {
@@ -124,20 +170,11 @@ const AgregarUsuarioClub = async () => {
   try {
     const response = await axios.post(`/users/${id}`, userData);
     personas.value.push(response.data);
-    newUser.value = {nombre: '', apellido: '', edad: null, seguro: true};
+    newUser.value = { nombre: '', apellido: '', edad: null, seguro: true };
     addDialogVisible.value = false;
-    toast.add({severity:'success', summary: 'Éxito', detail: 'Usuario agregado correctamente', life: 3000});
+    toast.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario agregado correctamente', life: 3000 });
   } catch (error) {
-    toast.add({severity:'error', summary: 'Error', detail: 'No se pudo agregar el usuario', life: 3000});
-  }
-};
-const actions = ref([
-  {name: 'edit', icon: 'pi pi-pencil', class: 'p-button-rounded p-button-primary p-mr-2'}
-]);
-const handleAction = ({product, actionName}) => {
-  switch (actionName) {
-    case 'edit':
-      break;
+    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo agregar el usuario', life: 3000 });
   }
 };
 
@@ -156,6 +193,21 @@ const usuariosAsociadosClub = async (clubId) => {
     personas.value = response.data.users;
   } catch (error) {
     console.error('Error al obtener los usuarios del club', error);
+  }
+};
+
+const editarUsuario = async()=>
+{
+  try {
+    const response = await axios.put(`/users/${editUser.value.id}`, editUser.value);
+    const index = personas.value.findIndex(p => p.id === editUser.value.id);
+    if (index !== -1) {
+      personas.value[index] = { ...response.data };
+    }
+    editDialogVisible.value = false;
+    toast.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario editado correctamente', life: 3000 });
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo editar el usuario', life: 3000 });
   }
 };
 

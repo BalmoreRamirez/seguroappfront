@@ -15,32 +15,30 @@
 </template>
 
 <script setup>
-import {ref, defineProps, defineEmits} from 'vue';
+import {defineProps, defineEmits} from 'vue';
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 
-const emit = defineEmits(['view','edit']);
+const emit = defineEmits(['action']);
 const props = defineProps({
   products: Array,
   columns: Array,
   actions: Array
 });
 
-const view = (product) => {
-  emit('view', product);
-};
-
-const edit = (product) => {
-  emit('edit', product.id);
-};
-
-const delete2 = (product) => {
-  console.log(`Deleting product: ${product.name}`);
-};
-
 const handleAction = (product, actionName) => {
-  emit('action', { product, actionName });
+  switch (actionName) {
+    case 'view':
+      emit('action', { product, actionName });
+      break;
+    case 'edit':
+      emit('action', { product, actionName });
+      break;
+    case 'delete':
+      console.log(`Deleting product: ${product.name}`);
+      break;
+  }
 };
 </script>

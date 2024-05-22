@@ -47,11 +47,12 @@ const columns = ref([
   {field: 'id', header: 'Id'},
   {field: 'nombre', header: 'Club'},
   {field: 'iglesia', header: 'Zona'},
-  {field: 'distrito', header: 'Distrito'}
+  {field: 'distrito', header: 'Distrito'},
+  {field: 'userCount', header: 'MIembros'},
 ]);
 const products = ref([]);
 
-const fetchClubs = async () => {
+const ListaClubes = async () => {
   try {
     const response = await axios.get('/clubs');
     products.value = response.data;
@@ -60,7 +61,7 @@ const fetchClubs = async () => {
   }
 };
 
-onMounted(fetchClubs);
+onMounted(ListaClubes);
 
 const openEditDialog = (productId) => {
   const product = products.value.find(p => p.id === productId);
