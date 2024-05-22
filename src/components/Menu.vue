@@ -1,13 +1,13 @@
 <template>
   <nav class="mb-4 bg-blue-950 text-white px-24 py-4 rounded-b-lg shadow-lg">
-    <ul class="flex justify-around sm:justify-start space-x-0 sm:space-x-4">
-      <li v-for="route in routes" :key="route.name">
-        <router-link :to="route.path" active-class="active-link" class="hover:text-indigo-300">{{ route.name }}</router-link>
-      </li>
-      <li>
-        <button @click="logout" class="hover:text-indigo-300">Cerrar sesión</button>
-      </li>
-    </ul>
+    <div class="flex justify-between">
+      <ul class="flex justify-around sm:justify-start space-x-0 sm:space-x-4">
+        <li v-for="route in routes" :key="route.name">
+          <router-link :to="route.path" active-class="active-link" class="hover:text-indigo-300">{{ route.name }}</router-link>
+        </li>
+      </ul>
+      <button @click="logout" class="hover:text-indigo-300">Cerrar sesión</button>
+    </div>
   </nav>
 </template>
 <script>

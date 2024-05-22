@@ -35,7 +35,7 @@ import {useToast} from "primevue/usetoast";
 const router = useRouter();
 const username = ref('');
 const password = ref('');
-const toast = useToast(); // Crea una instancia de toast
+const toast = useToast();
 
 const login = async () => {
   try {
