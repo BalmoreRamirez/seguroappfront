@@ -1,8 +1,7 @@
 <template>
   <div class="p-4 sm:p-6">
     <div class="flex items-center mb-4">
-      <InputText type="text" v-model="value" placeholder="Buscar club..." class="flex-grow mr-2"/>
-      <Button label="Buscar" icon="pi pi-search"/>
+      <InputText type="text" v-model="buscador" placeholder="Buscar club..." class="flex-grow mr-2"/>
     </div>
     <div>
       <div>
@@ -38,7 +37,7 @@
   </Dialog>
 </template>
 <script setup>
-import {onMounted, ref} from 'vue';
+import {onMounted, ref, watch} from 'vue';
 import {useRouter} from 'vue-router';
 import axios from '../axios';
 import InputText from 'primevue/inputtext';
@@ -52,9 +51,10 @@ const toast = useToast();
 
 const router = useRouter();
 const zonas = ref([]);
-const value = ref(null);
+const buscador = ref(null);
 const editDialogVisible = ref(false);
 const productToEdit = ref(null);
+const originalProducts = ref([]);
 const columns = ref([
   {field: 'id', header: 'Id'},
   {field: 'nombre', header: 'Club'},
@@ -68,12 +68,21 @@ const products = ref([]);
 const ListaClubes = async () => {
   try {
     const response = await axios.get('/clubs');
-    products.value = response.data;
+    originalProducts.value = response.data;
+    products.value = [...originalProducts.value];
   } catch (error) {
     console.error('Error al obtener los clubes', error);
   }
 };
-
+watch(buscador, (newVal) => {
+  if (!newVal) {
+    products.value = [...originalProducts.value]; // Si el buscador está vacío, muestra todos los clubes
+  } else {
+    products.value = originalProducts.value.filter(product =>
+        product.nombre.toLowerCase().includes(newVal.toLowerCase()) // Filtra los clubes basándose en el nombre
+    );
+  }
+});
 const listaZonas = async () => {
   try {
     const response = await axios.get('/zonas');
@@ -95,7 +104,7 @@ const openEditDialog = (productId) => {
   }
   productToEdit.value = {...product, zona: product.zona};
 
-  const matchingZone = zonas.value.find(zona => zona.nombre===productToEdit.value.zona);
+  const matchingZone = zonas.value.find(zona => zona.nombre === productToEdit.value.zona);
   console.log(matchingZone)
   console.log(productToEdit.value.zona)
   if (matchingZone) {
@@ -114,13 +123,42 @@ const actualizarClub = async () => {
         await ListaClubes()
         toast.add({severity: 'success', summary: 'Éxito', detail: 'Club actualizado con éxito', life: 3000});
       } else {
-        toast.add({severity: 'error', summary: 'Error', detail: `Error al actualizar el club: ${response.status}`, life: 3000});
+        toast.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error al actualizar el club: ${response.status}`,
+          life: 3000
+        });
       }
     } catch (error) {
-      toast.add({severity: 'error', summary: 'Error', detail: `Error al actualizar el club: ${error.message}`, life: 3000});
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: `Error al actualizar el club: ${error.message}`,
+        life: 3000
+      });
     }
   }
   editDialogVisible.value = false;
+};
+
+const eliminarClub = async (productId) => {
+  const confirmation = confirm('¿Estás seguro de que quieres eliminar este club?');
+  if (!confirmation) {
+    return;
+  }
+  try {
+    const response = await axios.delete(`/clubs/${productId}`);
+
+    if (response.status !== 200) {
+      toast.add({severity: 'error', summary: 'Error', detail: `Error al eliminar el club: ${response.status}`, life: 3000});
+      return;
+    }
+    await ListaClubes();
+    toast.add({severity: 'success', summary: 'Éxito', detail: 'Club eliminado con éxito', life: 3000});
+  } catch (error) {
+    toast.add({severity: 'error', summary: 'Error', detail: `Error al eliminar el club: ${error.message}`, life: 3000});
+  }
 };
 
 const cancel = () => {
@@ -146,6 +184,7 @@ const handleAction = ({product, actionName}) => {
       openEditDialog(product.id);
       break;
     case 'delete':
+      eliminarClub(product.id);
       break;
   }
 };
