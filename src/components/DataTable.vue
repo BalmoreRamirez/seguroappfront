@@ -37,7 +37,7 @@ const handleAction = (product, actionName) => {
       emit('action', { product, actionName });
       break;
     case 'delete':
-      console.log(`Deleting product: ${product.name}`);
+      emit('action', { product, actionName });
       break;
   }
 };
