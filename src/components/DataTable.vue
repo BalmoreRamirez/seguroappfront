@@ -1,7 +1,12 @@
 <template>
   <div class="card">
     <DataTable :value="products" :autoLayout="true" tableStyle="min-width: 50rem">
-      <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header"></Column>
+      <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header">
+        <template #body="slotProps">
+          <Tag v-if="col.field === 'seguro'">{{ slotProps.data[col.field]?'si':'no' }}</Tag>
+          <span v-else>{{ slotProps.data[col.field] }}</span>
+        </template>
+      </Column>
       <Column header="Acciones" class="w-full sm:w-1/4">
         <template #body="slotProps">
           <div class="space-x-2">
@@ -16,7 +21,7 @@
 
 <script setup>
 import {defineProps, defineEmits} from 'vue';
-
+import Tag from 'primevue/tag';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';

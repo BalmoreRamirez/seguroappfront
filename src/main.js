@@ -15,5 +15,5 @@ createApp(App)
         unstyled: false,
         pt: Tailwind,
     })
-    .use(ToastService) // Añade esta línea
+    .use(ToastService)
     .mount('#app')
