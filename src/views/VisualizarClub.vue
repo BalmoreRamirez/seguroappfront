@@ -18,7 +18,7 @@
     </div>
     <Card class="p-mb-2">
       <template #title>
-        <h2 v-if="product">Club: <span class="uppercase">{{ product.nombre }}</span></h2>
+        <h2 v-if="product">Club: <span class="uppercase">{{ product?.nombre }}</span></h2>
       </template>
       <template #content>
         <div class="p-d-flex p-flex-column">
@@ -28,11 +28,13 @@
         </div>
       </template>
     </Card>
-    <div class="my-5 flex justify-end">
+    <div class="my-5 flex justify-end space-x-2">
       <Button label="Agregar Persona" @click="openAddDialog"/>
+      <Button label="Generar PDF" @click="generatePDF" class="ml-2" icon="pi pi-file-pdf"/>
+      <Button label="Importar Excel" @click="openImportDialog" class="ml-2" icon="pi pi-file-excel"/>
     </div>
     <div>
-      <h2 class="text-3xl text-blue-950 mb-5 bg-blue-300 p-3 rounded">Lista de miembros de {{ product.nombre }}</h2>
+      <h2 class="text-3xl text-blue-950 mb-5 bg-blue-300 p-3 rounded">Lista de miembros de {{ product?.nombre }}</h2>
     </div>
     <DataTable :products="personas" :columns="columns" :actions="actions" @action="handleAction"></DataTable>
   </div>
@@ -86,6 +88,19 @@
       </div>
     </form>
   </Dialog>
+
+  <Dialog v-model:visible="importDialogVisible" maximizable modal header="Importar Excel" :style="{ width: '50rem' }">
+    <form class="flex flex-wrap">
+      <div class="w-full p-2 flex flex-col">
+        <label>Archivo:</label>
+        <input type="file" @change="handleFileUpload"/>
+      </div>
+      <div class="w-full p-2 space-x-2 flex justify-center">
+        <Button class="p-button-danger" label="Cancelar"/>
+        <Button @click="importFromExcel" label="Importar"/>
+      </div>
+    </form>
+  </Dialog>
 </template>
 
 <script setup>
@@ -101,6 +116,8 @@ import InputSwitch from 'primevue/inputswitch';
 import Breadcrumb from 'primevue/breadcrumb';
 import axios from "../axios.js";
 import {useToast} from "primevue/usetoast";
+import {jsPDF} from "jspdf";
+import autoTable from 'jspdf-autotable';
 
 const toast = useToast();
 const route = useRoute();
@@ -164,6 +181,73 @@ const handleAction = ({product, actionName}) => {
     case 'delete':
       deleteProduct(product);
       break;
+  }
+};
+const importDialogVisible = ref(false);
+let fileToUpload = null;
+
+const openImportDialog = () => {
+  importDialogVisible.value = true;
+};
+
+const handleFileUpload = (event) => {
+  fileToUpload = event.target.files[0];
+};
+
+const importFromExcel = async () => {
+  if (!fileToUpload) {
+    toast.add({severity: 'error', summary: 'Error', detail: 'No file selected', life: 3000});
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', fileToUpload);
+
+  try {
+    await axios.post(`/users/upload/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    toast.add({severity: 'success', summary: 'Éxito', detail: 'Data imported successfully', life: 3000});
+    importDialogVisible.value = false;
+  } catch (error) {
+    toast.add({severity: 'error', summary: 'Error', detail: 'Failed to import data', life: 3000});
+  }
+};
+const generatePDF = () => {
+  if (product.value) {
+    const doc = new jsPDF();
+
+    doc.setFontSize(22);
+    doc.text("Lista de miembros de " + product.value.nombre, 10, 20);
+
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100);
+    doc.text("Iglesia: " + product.value.iglesia, 10, 30);
+    doc.text("Distrito: " + product.value.distrito, 10, 40);
+
+    const data = personas.value.map(persona => [
+      persona.nombre,
+      persona.apellido,
+      persona.edad,
+      persona.seguro ? 'Sí' : 'No'
+    ]);
+
+    autoTable(doc, {
+      head: [['Nombre', 'Apellido', 'Edad', 'Seguro']],
+      body: data,
+      startY: 50
+    });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0);
+
+    doc.save("miembros.pdf");
+    toast.add({severity: 'success', summary: 'Éxito', detail: 'PDF generado correctamente', life: 3000});
+  } else {
+    toast.add({severity: 'error', summary: 'Error', detail: 'No se pudo generar el PDF', life: 3000});
   }
 };
 

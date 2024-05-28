@@ -23,7 +23,7 @@ import {jwtDecode} from "jwt-decode";
 
 const router = useRouter();
 const routes = router.getRoutes().filter(route => route.meta.showMenu);
-const sessionTime = ref(0);
+const sessionTime = ref(parseFloat(localStorage.getItem('sessionTime')) || 0);
 let intervalId;
 
 onMounted(() => {
@@ -34,9 +34,11 @@ onMounted(() => {
     const incrementPerSecond = 100 / sessionDuration;
     intervalId = setInterval(() => {
       sessionTime.value += incrementPerSecond;
+      localStorage.setItem('sessionTime', sessionTime.value.toString());
       if (sessionTime.value >= 100) {
         clearInterval(intervalId);
         localStorage.removeItem('token');
+        localStorage.removeItem('sessionTime');
         router.push({name: 'Login'});
       }
     }, 1000);
@@ -50,6 +52,7 @@ onUnmounted(() => {
 const logout = () => {
   clearInterval(intervalId);
   localStorage.removeItem('token');
+  localStorage.removeItem('sessionTime');
   router.push({name: 'Login'});
 };
 

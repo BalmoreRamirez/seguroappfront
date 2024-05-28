@@ -8,7 +8,7 @@
       </div>
       <div class="bg-blue-200 p-4 rounded-lg shadow-md text-center">
         <i class="pi pi-users text-blue-600 text-2xl"></i>
-        <p class="text-blue-600 text-lg">Total de usuarios registrados</p>
+        <p class="text-blue-600 text-lg">Total de conquistadores registrados</p>
         <p class="text-blue-950 text-2xl font-bold">{{ totalUsuarios }}</p>
       </div>
     </div>
