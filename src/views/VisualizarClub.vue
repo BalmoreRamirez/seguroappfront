@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 sm:p-24" style="height: 100vh;">
+  <div class="container" style="height: 100vh;">
     <div class="my-5">
 
       <Breadcrumb :home="home" :model="items">
@@ -16,22 +16,48 @@
         </template>
       </Breadcrumb>
     </div>
-    <Card class="p-mb-2">
-      <template #title>
-        <h2 v-if="product">Club: <span class="uppercase">{{ product?.nombre }}</span></h2>
-      </template>
-      <template #content>
-        <div class="p-d-flex p-flex-column">
-          <h2 class="text-2xl" v-if="product">Iglesia: <span class="text-primary-500">{{ product.iglesia }}</span></h2>
-          <h2 class="text-2xl" v-if="product">Distrito: <span class="text-primary-500">{{ product.distrito }}</span>
+    <div class="flex flex-col md:flex-row md:space-x-6 pb-5">
+      <Card class="p-mb-2 md:w-1/2 shadow shadow-2xl">
+        <template #title>
+          <h2 class="text-2xl sm:text-3xl" v-if="product">Club: <span class="uppercase">{{ product?.nombre }}</span>
           </h2>
-        </div>
-      </template>
-    </Card>
-    <div class="my-5 flex justify-end space-x-2">
+        </template>
+        <template #content>
+          <div class="p-d-flex p-flex-column">
+            <h2 class="text-lg sm:text-xl" v-if="product">Iglesia: <span class="text-primary-500">{{
+                product.iglesia
+              }}</span></h2>
+            <h2 class="text-lg sm:text-xl" v-if="product">Distrito: <span class="text-primary-500">{{
+                product.distrito
+              }}</span></h2>
+          </div>
+        </template>
+      </Card>
+      <Card class="p-mb-2 md:w-1/2 shadow shadow-2xl">
+        <template #title>
+          <h2 class="text-2xl sm:text-3xl" v-if="product">Estadísticas del club: <span
+              class="uppercase">{{ product?.nombre }}</span></h2>
+        </template>
+        <template #content>
+          <div class="p-d-flex p-flex-column space-y-2">
+            <h2 class="text-lg sm:text-xl" v-if="product">Cantidad de integrantes: <span
+                class="text-primary-500">{{ (personas.length) }}</span></h2>
+            <h2 class="text-lg sm:text-xl bg-blue-300 p-1 rounded-2xl" v-if="product">Cantidad de aventureros: <span
+                class="text-primary-500">{{ (canti_aventureros.length) }}</span></h2>
+            <h2 class="text-lg sm:text-xl bg-amber-100 p-1 rounded-2xl" v-if="product">Cantidad de conquistadores: <span
+                class="text-primary-500">{{ (canti_conquis.length) }}</span></h2>
+            <h2 class="text-lg sm:text-xl bg-emerald-300 p-1 rounded-2xl" v-if="product">Cantidad de aspirantes: <span
+                class="text-primary-500">{{ (canti_guias.length) }}</span></h2>
+            <h2 class="text-lg sm:text-xl" v-if="product">Total a pagar de seguros: <span
+                class="text-primary-500">$ {{ (personas.length * 1.5) }}</span></h2>
+          </div>
+        </template>
+      </Card>
+    </div>
+    <div class="my-5 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
       <Button label="Agregar Persona" @click="openAddDialog"/>
-      <Button label="Generar PDF" @click="generatePDF" class="ml-2" icon="pi pi-file-pdf"/>
-      <Button label="Importar Excel" @click="openImportDialog" class="ml-2" icon="pi pi-file-excel"/>
+      <Button label="Generar PDF" @click="generatePDF" icon="pi pi-file-pdf"/>
+      <Button label="Importar Excel" @click="openImportDialog" icon="pi pi-file-excel"/>
     </div>
     <div>
       <h2 class="text-3xl text-blue-950 mb-5 bg-blue-300 p-3 rounded">Lista de miembros de {{ product?.nombre }}</h2>
@@ -118,13 +144,16 @@ import axios from "../axios.js";
 import {useToast} from "primevue/usetoast";
 import {jsPDF} from "jspdf";
 import autoTable from 'jspdf-autotable';
+import {format} from 'date-fns';
 
 const toast = useToast();
 const route = useRoute();
 const id = route.params.id;
 const product = ref();
 const personas = ref([]);
-
+const canti_aventureros = ref([]);
+const canti_conquis = ref([]);
+const canti_guias = ref([]);
 const addDialogVisible = ref(false);
 const editDialogVisible = ref(false);
 const editUser = ref(null);
@@ -155,7 +184,8 @@ const columns = ref([
   {field: 'nombre', header: 'Nombre'},
   {field: 'apellido', header: 'Apellido'},
   {field: 'edad', header: 'Edad'},
-  {field: 'seguro', header: 'Seguro'}
+  {field: 'seguro', header: 'Seguro'},
+  {field: 'createdAt', header: 'Fecha inscripción'}
 ]);
 
 
@@ -232,11 +262,12 @@ const generatePDF = () => {
       persona.nombre,
       persona.apellido,
       persona.edad,
-      persona.seguro ? 'Sí' : 'No'
+      persona.seguro ? 'Sí' : 'No',
+      formatDate(persona.createdAt)
     ]);
 
     autoTable(doc, {
-      head: [['Nombre', 'Apellido', 'Edad', 'Seguro']],
+      head: [['Nombre', 'Apellido', 'Edad', 'Seguro', 'Fecha inscripción']],
       body: data,
       startY: 50
     });
@@ -244,7 +275,10 @@ const generatePDF = () => {
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(0);
 
-    doc.save("miembros.pdf");
+    const currentYear = new Date().getFullYear();
+    const fileName = `${product.value.nombre}_${currentYear}.pdf`;
+
+    doc.save(fileName);
     toast.add({severity: 'success', summary: 'Éxito', detail: 'PDF generado correctamente', life: 3000});
   } else {
     toast.add({severity: 'error', summary: 'Error', detail: 'No se pudo generar el PDF', life: 3000});
@@ -283,6 +317,16 @@ const usuariosAsociadosClub = async (clubId) => {
   try {
     const response = await axios.get(`/clubs/${clubId}/users`);
     personas.value = response.data.users;
+    personas.value.map(persona => {
+      if (persona.edad < 10) {
+        canti_aventureros.value.push(persona)
+      } else if (persona.edad >= 10 && persona.edad < 15) {
+        canti_conquis.value.push(persona)
+      } else {
+        canti_guias.value.push(persona)
+      }
+
+    });
   } catch (error) {
     console.error('Error al obtener los usuarios del club', error);
   }
@@ -316,6 +360,10 @@ const deleteProduct = async (product) => {
       toast.add({severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el usuario', life: 3000});
     }
   }
+};
+
+const formatDate = (date) => {
+  return format(new Date(date), 'dd/MM/yyyy');
 };
 onBeforeMount(() => {
   detalleClub(id)

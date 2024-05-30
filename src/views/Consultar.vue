@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 sm:p-6">
+  <div class="container">
     <div class="flex items-center mb-4">
       <InputText type="text" v-model="buscador" placeholder="Buscar club..." class="flex-grow mr-2"/>
     </div>

@@ -33,7 +33,7 @@ const routes = [
         path: '/visualizarClub/:id',
         name: 'VisualizarClub',
         component: VisualizarClub,
-        meta: {requiresAuth: true, showMenu: true}
+        meta: {requiresAuth: true, showMenu: false}
     }
 ]
 
