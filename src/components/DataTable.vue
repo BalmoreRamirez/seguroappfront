@@ -77,4 +77,8 @@ const formatDate = (date) => {
 .tag-conquistador {
   background-color: rgba(215, 215, 79, 0.94);
 }
+
+.p-datatable .p-datatable-tbody > tr > td {
+  text-align: center;
+}
 </style>

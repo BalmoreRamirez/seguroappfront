@@ -1,6 +1,5 @@
 <template>
-  <div class="h-screen px-4 sm:px-20 py-10 flex flex-col justify-center items-center space-y-10">
-
+  <div class="sm:px-20 flex flex-col justify-center items-center space-y-10">
     <h1 class="text-2xl sm:text-3xl text-blue-950">
       Control de seguros
     </h1>
@@ -10,14 +9,14 @@
         <span class="text-blue-950 text-2xl">
         Clubes
         </span>
-        <span class="font-bold text-blue-950 text-2xl">{{totalClubes}}</span>
+        <span class="font-bold text-blue-950 text-2xl">{{ totalClubes }}</span>
       </div>
       <div
           class="flex flex-col border-2 p-6 sm:p-10 border-blue-950 rounded hover:bg-blue-200 transition-colors duration-200 text-center">
         <span class="text-blue-950 text-2xl">
         Miembros
         </span>
-        <span class="font-bold text-blue-950 text-2xl">{{totalUsuarios}}</span>
+        <span class="font-bold text-blue-950 text-2xl">{{ totalUsuarios }}</span>
       </div>
     </div>
 

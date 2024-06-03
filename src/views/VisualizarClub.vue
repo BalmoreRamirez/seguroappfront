@@ -1,7 +1,6 @@
 <template>
-  <div class="container" style="height: 100vh;">
-    <div class="my-5">
-
+  <div class="container my-10">
+    <div>
       <Breadcrumb :home="home" :model="items">
         <template #item="{ item, props }">
           <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>
@@ -62,7 +61,9 @@
     <div>
       <h2 class="text-3xl text-blue-950 mb-5 bg-blue-300 p-3 rounded">Lista de miembros de {{ product?.nombre }}</h2>
     </div>
-    <DataTable :products="personas" :columns="columns" :actions="actions" @action="handleAction"></DataTable>
+    <div>
+      <DataTable :products="personas" :columns="columns" :actions="actions" @action="handleAction"></DataTable>
+    </div>
   </div>
 
   <Dialog v-model:visible="addDialogVisible" maximizable modal header="Agregar Persona" :style="{ width: '50rem' }">
@@ -170,9 +171,8 @@ const home = ref({
   route: '/inicio'
 });
 
-
 const items = computed(() => [
-  {label: 'Consultar', route: {name: 'Consultar'}},
+  {label: 'Consultar', route: {name: 'Clubs'}},
   {
     label: product.value ? product.value.nombre : '',
     route: product.value ? {name: 'VisualizarClub', params: {id: product.value.id}} : {}
@@ -187,7 +187,6 @@ const columns = ref([
   {field: 'seguro', header: 'Seguro'},
   {field: 'createdAt', header: 'Fecha inscripción'}
 ]);
-
 
 const openAddDialog = () => {
   addDialogVisible.value = true;

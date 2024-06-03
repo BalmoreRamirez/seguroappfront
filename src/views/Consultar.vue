@@ -4,8 +4,10 @@
       <InputText type="text" v-model="buscador" placeholder="Buscar club..." class="flex-grow mr-2"/>
     </div>
     <div>
-      <div>
-        <h2 class="text-3xl text-blue-950 mb-5 bg-blue-300 p-3 rounded">Lista de clubes</h2>
+      <div class="flex justify-between items-center">
+        <h2 class="text-3xl text-blue-950 mb-5 p-1 rounded">Lista de clubes</h2>
+        <Button label="Agregar Club" @click="openAddDialog"
+                class="mt-2 sm:mt-0 hover:text-indigo-300 bg-blue-400 p-3 rounded"/>
       </div>
       <DataTable :products="products" :columns="columns" :actions="actions" @action="handleAction"></DataTable>
     </div>
@@ -35,6 +37,43 @@
       </div>
     </form>
   </Dialog>
+  <Dialog v-model:visible="addDialogVisible" maximizable modal header="Agregar Club" :style="{ width: '50rem' }"
+          :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+    <form class="flex flex-col">
+      <div>
+        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre del Club</label>
+        <InputText type="text" v-model="v$.nombre.$model" class="w-full"/>
+        <div v-if="v$.nombre.$error" class="text-red-500 text-xs">Todos los campos son requeridos</div>
+      </div>
+      <div>
+        <label for="Iglesia" class="block text-sm font-medium text-gray-700">Iglesia</label>
+        <InputText type="text" v-model="v$.iglesia.$model" class="w-full"/>
+        <div v-if="v$.iglesia.$error" class="text-red-500 text-xs">Todos los campos son requeridos</div>
+      </div>
+      <div>
+        <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+        <InputMask v-model="v$.telefono.$model" mask="99999999" placeholder="99999999"
+                   class="w-full"/>
+        <div v-if="v$.telefono.$error" class="text-red-500 text-xs">Todos los campos son requeridos</div>
+      </div>
+      <div>
+        <label for="zona" class="block text-sm font-medium text-gray-700">Zona</label>
+        <Dropdown v-model="v$.zona.$model" :options="zonas" placeholder="Selecciona la zona"
+                  optionLabel="nombre"
+                  class="w-full"/>
+        <div v-if="v$.zona.$error" class="text-red-500 text-xs">Todos los campos son requeridos</div>
+      </div>
+      <div>
+        <label for="distrito" class="block text-sm font-medium text-gray-700">Distrito</label>
+        <InputText type="text" v-model="v$.distrito.$model" class="w-full"/>
+        <div v-if="v$.distrito.$error" class="text-red-500 text-xs">Todos los campos son requeridos</div>
+      </div>
+      <div class="flex justify-center space-x-2 pt-5">
+        <Button label="Cancelar" @click="cancelAdd" class="p-button-secondary"/>
+        <Button @click="agregarClub" label="Guardar" class="p-button-primary"/>
+      </div>
+    </form>
+  </Dialog>
 </template>
 <script setup>
 import {onMounted, ref, watch} from 'vue';
@@ -46,9 +85,11 @@ import DataTable from '../components/DataTable.vue';
 import Dialog from 'primevue/dialog';
 import Dropdown from 'primevue/dropdown';
 import {useToast} from "primevue/usetoast";
+import useVuelidate from "@vuelidate/core";
+import {helpers, required} from "@vuelidate/validators";
+import InputMask from "primevue/inputmask";
 
 const toast = useToast();
-
 const router = useRouter();
 const zonas = ref([]);
 const buscador = ref(null);
@@ -65,6 +106,61 @@ const columns = ref([
 ]);
 const products = ref([]);
 
+const newClub = ref({
+  nombre: '',
+  iglesia: '',
+  telefono: '',
+  distrito: '',
+  zona: ''
+});
+
+const addDialogVisible = ref(false);
+
+const openAddDialog = () => {
+  newClub.value = {};
+  addDialogVisible.value = true;
+};
+
+const cancelAdd = () => {
+  addDialogVisible.value = false;
+};
+const rules = {
+  nombre: {
+    required: helpers.withMessage("El campo nombre es obligatorio", required)
+  },
+  iglesia: {required},
+  telefono: {required},
+  distrito: {required},
+  zona: {required}
+}
+
+const v$ = useVuelidate(rules, newClub);
+
+const agregarClub = async () => {
+  try {
+    const response = await axios.post('/clubs/ingresar', newClub.value);
+    if (response.status === 201) {
+      await ListaClubes();
+      toast.add({severity: 'success', summary: 'Éxito', detail: 'Club agregado con éxito', life: 3000});
+    } else {
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: `Error al agregar el club: ${response.status}`,
+        life: 3000
+      });
+    }
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: `Error al agregar el club: ${error.message}`,
+      life: 3000
+    });
+  }
+  addDialogVisible.value = false;
+};
+
 const ListaClubes = async () => {
   try {
     const response = await axios.get('/clubs');
@@ -74,15 +170,17 @@ const ListaClubes = async () => {
     console.error('Error al obtener los clubes', error);
   }
 };
+
 watch(buscador, (newVal) => {
   if (!newVal) {
-    products.value = [...originalProducts.value]; // Si el buscador está vacío, muestra todos los clubes
+    products.value = [...originalProducts.value];
   } else {
     products.value = originalProducts.value.filter(product =>
-        product.nombre.toLowerCase().includes(newVal.toLowerCase()) // Filtra los clubes basándose en el nombre
+        product.nombre.toLowerCase().includes(newVal.toLowerCase())
     );
   }
 });
+
 const listaZonas = async () => {
   try {
     const response = await axios.get('/zonas');
@@ -91,6 +189,7 @@ const listaZonas = async () => {
     console.error('Error al obtener las zonas', error);
   }
 };
+
 onMounted(async () => {
   await ListaClubes();
   await listaZonas();
@@ -151,7 +250,12 @@ const eliminarClub = async (productId) => {
     const response = await axios.delete(`/clubs/${productId}`);
 
     if (response.status !== 200) {
-      toast.add({severity: 'error', summary: 'Error', detail: `Error al eliminar el club: ${response.status}`, life: 3000});
+      toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: `Error al eliminar el club: ${response.status}`,
+        life: 3000
+      });
       return;
     }
     await ListaClubes();

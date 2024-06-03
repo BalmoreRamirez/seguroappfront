@@ -19,7 +19,7 @@ const routes = [
     },
     {
         path: '/consultar',
-        name: 'Consultar',
+        name: 'Clubs',
         component: Consultar,
         meta: {requiresAuth: true, showMenu: true}
     },
@@ -27,7 +27,7 @@ const routes = [
         path: '/ingresar',
         name: 'Ingresar',
         component: Ingresar,
-        meta: {requiresAuth: true, showMenu: true}
+        meta: {requiresAuth: true, showMenu: false}
     },
     {
         path: '/visualizarClub/:id',
@@ -37,7 +37,7 @@ const routes = [
     }
 ]
 
-const router = new createRouter({
+const router = createRouter({
     history: createWebHistory(process.env.BASE_URL),
     routes
 })
